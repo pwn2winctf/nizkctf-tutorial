@@ -51,17 +51,17 @@ In NIZKCTF we split a CTF into two repositories. The main repository holds the p
 5. Edit `settings.json`. Change `ctf_name` to the name of your CTF, and `submissions_project` to the fully qualified name (`"organisation/submissions_repository"`) of your submissions repository. Beware it is case-sensitive.
 
 
-## Prepare a Zip file for AWS Lambda
+## Prepare a zip file for AWS Lambda
 
-The AWS Lambda environment lacks several command line tools which are required by the bot. Therefore, we need to pack in a Zip file the main repository code together with some binaries.
+The AWS Lambda environment lacks several command line tools which are required by the bot. Therefore, we need to create a zip file containing both the main repository code and the required binaries.
 
-1. Download the [required binaries](https://github.com/pwn2winctf/nizkctf-tutorial/releases/download/20170908/binaries.tgz).
+1. Download the [required binaries](https://github.com/pwn2winctf/nizkctf-tutorial/releases/download/20170908/binaries.tgz) (precompiled for Amazon Linux AMI).
 
-2. Unpack it inside the main repository directory: `tar -zxf binaries.tgz`.
+2. Unpack the tarball inside the main repository directory: `tar -zxf binaries.tgz`.
 
-3. Create a Zip file containing everything: `zip -ry ../lambda.zip * .git*`.
+3. Create a zip file containing everything: `zip -ry ../lambda.zip * .git*`.
 
-**NOTE**: Currently, the bot does not run a `git pull` to get updates from the main repository. Therefore, the bot only knows about the challenges included in the Zip file: if you release new challenges during the course of the CTF, you need to update the Zip file. This is because AWS Lambda unpacks the Zip contents to a read-only location. In the future, we may change NIZKCTF to copy the repository to a temporary (writeable) directory and automatically pull any changes, but this is not the current behaviour.
+**NOTE**: Currently, the bot does not run a `git pull` to get updates from the main repository. Therefore, the bot only knows about the challenges included in the zip file: if you release new challenges during the course of the CTF, you need to update the zip file. This is because AWS Lambda unpacks the zip contents to a read-only location. In the future, we may change NIZKCTF to copy the repository to a temporary (writeable) directory and automatically pull any changes, but this is not the current behaviour.
 
 
 ## Set up the bot in AWS
@@ -90,7 +90,7 @@ The AWS Lambda environment lacks several command line tools which are required b
    ![CloudFormation outputs](github/cloudformation-outputs.png)
 
 
-### Upload the Zip file to AWS Lambda
+### Upload the zip file to AWS Lambda
 
 1. Go to the [AWS Lambda console](https://us-west-2.console.aws.amazon.com/lambda/home?region=us-west-2#/functions). Click on the Lambda function corresponding to the stack you have just created.
    ![AWS Lambda functions](img/aws-lambda-functions.png)
