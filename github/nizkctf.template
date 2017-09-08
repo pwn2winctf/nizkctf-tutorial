@@ -1,0 +1,162 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "NIZKCTF",
+  "Parameters": {
+    "GitUserEmail": {
+      "Description": "Author's user.email the Lambda Function will use for Git commits",
+      "Type": "String"
+    },
+    "GitUserName": {
+      "Description": "Author's user.name the Lambda Function will use for Git commits",
+      "Type": "String"
+    },
+    "GithubToken": {
+      "Description": "GitHub Personal Access Token",
+      "Type": "String",
+      "NoEcho" : true,
+      "AllowedPattern": "^[0-9a-f]{40}$",
+      "ConstraintDescription": "Must be a 40 char GitHub token"
+    },
+    "SSHIdentity": {
+      "Description": "Base64-encoded SSH private key for pushing commits to GitHub",
+      "Type": "String",
+      "NoEcho" : true
+    }
+  },
+  "Resources": {
+    "LambdaFunc": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-nizkctf"]]},
+        "Description": {"Fn::Join": ["", ["NIZKCTF Lambda Function for stack: ", {"Ref": "AWS::StackName"}]]},
+        "Handler": "lambda_function.lambda_handler",
+        "MemorySize": "128",
+        "Timeout": "30",
+        "Role": {"Fn::GetAtt": ["LambdaExecution", "Arn"]},
+        "Code": {
+          "ZipFile" : { "Fn::Join" : ["\n", [
+            "def lambda_handler(event, context):",
+            "    pass  # placeholder"
+          ]]}
+        },
+        "Environment": {
+          "Variables" : {
+            "CI_USER_EMAIL": {"Ref": "GitUserEmail"},
+            "CI_USER_NAME": {"Ref": "GitUserName"},
+            "REPOHOST_TOKEN": {"Ref": "GithubToken"},
+            "SSH_IDENTITY": {"Ref": "SSHIdentity"}
+          }
+        },
+        "Runtime": "python2.7"
+      }
+    },
+    "InvokeTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "Subscription": [{"Endpoint": {"Fn::GetAtt": ["LambdaFunc", "Arn"]}, "Protocol": "lambda"}]
+      }
+    },
+    "LambdaInvoke": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {"Fn::GetAtt": ["LambdaFunc", "Arn"]},
+        "Action": "lambda:InvokeFunction",
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {"Ref": "InvokeTopic"}
+      }
+    },
+    "LambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": {
+            "Effect": "Allow",
+            "Principal": {"Service": "lambda.amazonaws.com"},
+            "Action": "sts:AssumeRole"
+          }
+        },
+        "Policies": [{
+          "PolicyName": "WriteLogs",
+          "PolicyDocument": {
+            "Statement": {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": {"Fn::Join": ["", ["arn:aws:logs:*:*:log-group:/aws/lambda/", {"Ref": "AWS::StackName"}, "-*"]]}
+            }
+          }
+        }]
+      }
+    },
+    "SnsSender": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "Policies": [{
+          "PolicyName": "PublishOnly",
+          "PolicyDocument": {
+            "Statement": {
+              "Effect": "Allow",
+              "Action": "sns:Publish",
+              "Resource": {"Ref": "InvokeTopic"}
+            }
+          }
+        }]
+      }
+    },
+    "SnsAccessKey": {
+      "Type": "AWS::IAM::AccessKey",
+      "Properties": {
+        "UserName": {"Ref": "SnsSender"}
+      }
+    },
+    "SnsFailures": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": {
+            "Effect": "Allow",
+            "Principal": {"Service": "sns.amazonaws.com"},
+            "Action": "sts:AssumeRole"
+          }
+        },
+        "Policies": [{
+          "PolicyName": "WriteLogs",
+          "PolicyDocument": {
+            "Statement": {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:PutMetricFilter",
+                "logs:PutRetentionPolicy"
+              ],
+              "Resource": {"Fn::Join": ["", ["arn:aws:logs:*:*:log-group:sns/*/*/", {"Fn::GetAtt": ["InvokeTopic", "TopicName"]}, "/*"]]}
+            }
+          }
+        }]
+      }
+    }
+  },
+  "Outputs": {
+    "SnsAccessKey": {
+      "Description": "Use as 'Aws key' at GitHub",
+      "Value": {"Ref": "SnsAccessKey"}
+    },
+    "SnsTopic": {
+      "Description": "Use as 'Sns topic' at GitHub",
+      "Value": {"Ref": "InvokeTopic"}
+    },
+    "SnsRegion": {
+      "Description": "Use as 'Sns region' at GitHub",
+      "Value": {"Ref": "AWS::Region"}
+    },
+    "SnsSecret": {
+      "Description": "Use as 'Aws secret' at GitHub",
+      "Value": {"Fn::GetAtt": ["SnsAccessKey", "SecretAccessKey"]}
+    }
+  }
+}
