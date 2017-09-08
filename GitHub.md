@@ -70,7 +70,7 @@ The AWS Lambda environment lacks several command line tools which are required b
 
 1. Go to [Create Stack](https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new) in the CloudFormation console.
 
-2. Select **Upload a template to Amazon S3** and send our [nizkctf.template file](github/nizkctf.template). Click **Next**.
+2. Select **Upload a template to Amazon S3** and send our [nizkctf.template](github/nizkctf.template) file. Click **Next**.
 
 3. Fill the form:
    * **Stack Name**: Some name identifying your CTF, e.g. `myctf2017`.
@@ -114,6 +114,7 @@ The AWS Lambda environment lacks several command line tools which are required b
 By default, GitHub will trigger SNS in response to (and only to) push events, and currently we [cannot change](https://stackoverflow.com/a/43522648) the list of events from the GUI. Therefore, we need to call the API to tell GitHub we want to trigger the SNS on pull request events.
 
 1. Create a [Personal Access Token](https://github.com/settings/tokens) for your account. You already have one for the bot account, but you need another one for your own account to be able to change the repository settings. You must enable at least the **admin:repo_hook** scope for this token.
+
    ![Repository hook scope](github/repo_hook.png)
 
 2. Run the following commands in the shell:
