@@ -55,7 +55,7 @@ In NIZKCTF we split a CTF into two repositories. The main repository holds the p
 
 The AWS Lambda environment lacks several command line tools which are required by the bot. Therefore, we need to pack in a Zip file the main repository code together with some binaries.
 
-1. Download the [required binaries](TODO).
+1. Download the [required binaries](https://github.com/pwn2winctf/nizkctf-tutorial/releases/download/20170908/binaries.tgz).
 
 2. Unpack it inside the main repository directory: `tar -zxf binaries.tgz`.
 
