@@ -122,9 +122,9 @@ By default, GitHub will trigger SNS in response to (and only to) push events, an
    token="your personal access token"
    repo="organisation/submissions_repository"
 
-   id=$(curl -H "Authorization: token $TOKEN" https://api.github.com/repos/$repo/hooks | jq '.[] | select(.name=="amazonsns") | .id')
+   id=$(curl -H "Authorization: token $token" https://api.github.com/repos/$repo/hooks | jq '.[] | select(.name=="amazonsns") | .id')
 
-   curl -X PATCH -d '{"events":["pull_request"]}' -H "Authorization: token $TOKEN" https://api.github.com/repos/$repo/hooks/$id
+   curl -X PATCH -d '{"events":["pull_request"]}' -H "Authorization: token $token" https://api.github.com/repos/$repo/hooks/$id
    ```
    If you do not want to install the recommended [jq](https://stedolan.github.io/jq/) tool (which is available as a package in most Linux distribution repositories), you may instead manually collect the `id` from the `curl` output.
 
